@@ -123,30 +123,30 @@ fi
 
 ### Available Services
 
-| Service Name   | Description                              |
-| -------------- | ---------------------------------------- |
-| autopilot      | ArduPilot manager                        |
-| cable_guy      | Network cable management                 |
-| video          | mavlink-camera-manager (camera/streaming)|
-| mavlink2rest   | MAVLink REST API                         |
-| kraken         | Service manager                          |
-| wifi           | WiFi management                          |
-| zenohd         | Zenoh communication                      |
-| beacon         | Network beacon                           |
-| bridget        | Bridge management                        |
-| commander      | Command executor                         |
-| nmea_injector  | NMEA data injection                      |
-| helper         | System helper                            |
-| iperf3         | Network speed testing                    |
-| linux2rest     | System information REST API              |
-| filebrowser    | File browser web UI                      |
-| versionchooser | Version management UI                    |
-| pardal         | Notification service                     |
-| ping           | Sonar ping management                    |
-| ttyd           | Web terminal                             |
-| nginx          | Web server / reverse proxy               |
-| log_zipper     | Log compression                          |
-| bag_of_holding | Data storage                             |
+| Service Name   | Description                               |
+| -------------- | ----------------------------------------- |
+| autopilot      | ArduPilot manager                         |
+| cable_guy      | Network cable management                  |
+| video          | mavlink-camera-manager (camera/streaming) |
+| mavlink2rest   | MAVLink REST API                          |
+| kraken         | Service manager                           |
+| wifi           | WiFi management                           |
+| zenohd         | Zenoh communication                       |
+| beacon         | Network beacon                            |
+| bridget        | Bridge management                         |
+| commander      | Command executor                          |
+| nmea_injector  | NMEA data injection                       |
+| helper         | System helper                             |
+| iperf3         | Network speed testing                     |
+| linux2rest     | System information REST API               |
+| filebrowser    | File browser web UI                       |
+| versionchooser | Version management UI                     |
+| pardal         | Notification service                      |
+| ping           | Sonar ping management                     |
+| ttyd           | Web terminal                              |
+| nginx          | Web server / reverse proxy                |
+| log_zipper     | Log compression                           |
+| bag_of_holding | Data storage                              |
 
 ## Container Runtime Information
 
