@@ -88,4 +88,16 @@ http://192.168.254.245:8000/docs
 cd /data/git
 
 git clone git@github.com:MasonKim000/PVPHS-ROV.git
+cd PVPHS-ROV
+
+cd frontend
+git pull
+npm ci
+npm run dev
+
+
+cd backend
+git pull
+uv sync
+uv run uvicorn main:app --host 0.0.0.0 --port 8000
 ```
