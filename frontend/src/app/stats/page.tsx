@@ -6,10 +6,10 @@ export default async function Home() {
   const systemInfo = await getSystemDetails();
 
   return (
-    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <h1 className="text-3xl font-bold mb-6 text-foreground">Raspberry Pi</h1>
+    <div className="mx-auto max-w-md space-y-6">
+      <h1 className="text-3xl font-bold text-foreground">Raspberry Pi</h1>
 
-      <Card className="w-full max-w-md">
+      <Card>
         <CardHeader>
           <CardTitle>System Information</CardTitle>
         </CardHeader>
@@ -62,6 +62,6 @@ export default async function Home() {
           </div>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }
