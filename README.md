@@ -81,3 +81,11 @@ uv add websockets
 ```
 
 http://192.168.254.245:8000/docs
+
+## git clone
+
+```sh
+cd /data/git
+
+git clone git@github.com:MasonKim000/PVPHS-ROV.git
+```
