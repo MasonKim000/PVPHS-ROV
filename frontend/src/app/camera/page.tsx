@@ -1,72 +1,30 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useState, useCallback } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-function revokeImgSrc(img: HTMLImageElement | null) {
-  if (img?.src?.startsWith("blob:")) {
-    URL.revokeObjectURL(img.src);
-    img.src = "";
-  }
-}
-
 export default function CameraStream() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasFrame, setHasFrame] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
 
-  const wsUrl = isStreaming
-    ? typeof window !== "undefined"
-      ? `ws://${window.location.hostname}:8000/ws`
-      : null
-    : null;
-
-  const { lastMessage, readyState } = useWebSocket(wsUrl, {
-    shouldReconnect: () => isStreaming,
-  });
-
-  useEffect(() => {
-    if (!isStreaming) {
-      setHasFrame(false);
-      revokeImgSrc(imgRef.current);
-    }
-  }, [isStreaming]);
-
-  useEffect(() => {
-    if (lastMessage?.data instanceof Blob) {
-      const oldSrc = imgRef.current?.src;
-      const url = URL.createObjectURL(lastMessage.data);
-      if (imgRef.current) {
-        imgRef.current.src = url;
-        if (!hasFrame) setHasFrame(true);
-      }
-      if (oldSrc?.startsWith("blob:")) {
-        URL.revokeObjectURL(oldSrc);
-      }
-    }
-  }, [lastMessage, hasFrame]);
-
-  useEffect(() => {
-    const img = imgRef.current;
-    return () => revokeImgSrc(img);
-  }, []);
+  const mjpegUrl =
+    typeof window !== "undefined"
+      ? `http://${window.location.hostname}:8000/mjpeg`
+      : "";
 
   const toggleStream = useCallback(async () => {
     const action = isStreaming ? "stop" : "start";
     try {
       const res = await fetch(`/py/${action}`, { method: "POST" });
       if (!res.ok) return;
-      revokeImgSrc(imgRef.current);
       setIsStreaming(!isStreaming);
+      setHasFrame(false);
     } catch {
       // network error — do not toggle state
     }
   }, [isStreaming]);
-
-  const connectionStatus = isStreaming ? ReadyState[readyState] : "IDLE";
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -76,7 +34,7 @@ export default function CameraStream() {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            Status: {connectionStatus}
+            Status: {isStreaming ? "STREAMING" : "IDLE"}
           </span>
           <Button
             onClick={toggleStream}
@@ -102,16 +60,17 @@ export default function CameraStream() {
                 size={40}
                 strokeWidth={2}
               />
-              <span className="text-gray-400 text-sm">
-                {connectionStatus}...
-              </span>
+              <span className="text-gray-400 text-sm">Connecting...</span>
             </div>
           )}
-          <img
-            ref={imgRef}
-            alt="JPEG Stream"
-            className={`w-full h-full object-contain ${!hasFrame ? "hidden" : ""}`}
-          />
+          {isStreaming && (
+            <img
+              src={mjpegUrl}
+              alt="JPEG Stream"
+              onLoad={() => { if (!hasFrame) setHasFrame(true); }}
+              className={`w-full h-full object-contain ${!hasFrame ? "hidden" : ""}`}
+            />
+          )}
         </div>
       </CardContent>
     </Card>
