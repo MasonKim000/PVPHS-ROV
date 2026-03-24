@@ -1,10 +1,35 @@
 import asyncio
+import os
 import cv2
+import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from threading import Condition, Event, Thread, Lock
 from contextlib import asynccontextmanager
+from ultralytics import YOLO
+
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolov8n_ncnn_model")
+if not os.path.exists(MODEL_PATH):
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolov8n.pt")
+
+
+class Detector:
+    """YOLOv8 object detector. Prefer NCNN model for Pi performance."""
+
+    def __init__(self):
+        self.model = YOLO(MODEL_PATH)
+        self.enabled = False
+
+    def annotate(self, frame: np.ndarray) -> np.ndarray:
+        if not self.enabled:
+            return frame
+        results = self.model(frame, verbose=False)
+        return results[0].plot()
+
+
+detector = Detector()
 
 
 class Camera:
@@ -31,15 +56,22 @@ class Camera:
                 self.cap.release()
                 self.cap = None
 
-    def read_jpeg(self) -> bytes | None:
+    def read_frame(self) -> np.ndarray | None:
         with self.lock:
             if not self.cap or not self.cap.isOpened():
                 return None
             ret, frame = self.cap.read()
             if not ret or frame is None:
                 return None
-            _, buf = cv2.imencode(".jpg", frame)
-            return buf.tobytes()
+            return frame
+
+    def read_jpeg(self) -> bytes | None:
+        frame = self.read_frame()
+        if frame is None:
+            return None
+        frame = detector.annotate(frame)
+        _, buf = cv2.imencode(".jpg", frame)
+        return buf.tobytes()
 
 
 camera = Camera()
@@ -201,3 +233,20 @@ async def start_stream():
 async def stop_stream():
     await jpeg_stream.stop()
     return {"message": "Stream stopped"}
+
+
+@app.post("/detect/on")
+def detect_on():
+    detector.enabled = True
+    return {"detection": True}
+
+
+@app.post("/detect/off")
+def detect_off():
+    detector.enabled = False
+    return {"detection": False}
+
+
+@app.get("/detect/status")
+def detect_status():
+    return {"detection": detector.enabled}
