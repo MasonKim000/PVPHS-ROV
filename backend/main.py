@@ -129,11 +129,13 @@ class JpegStream:
 
 jpeg_stream = JpegStream()
 jpeg_stream.stop_event.set()
+shutdown_event = Event()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+    shutdown_event.set()
     await jpeg_stream.stop()
 
 
@@ -162,7 +164,7 @@ def get_image():
 def generate_frames():
     camera.open()
     try:
-        while True:
+        while not shutdown_event.is_set():
             jpeg = camera.read_jpeg()
             if jpeg is None:
                 break
