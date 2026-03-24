@@ -43,6 +43,9 @@ export default function CameraStream() {
   }, [lastMessage]);
 
   const toggleStream = useCallback(async () => {
+    if (!isStreaming && imgRef.current) {
+      imgRef.current.src = "";
+    }
     const action = isStreaming ? "stop" : "start";
     await fetch(`/py/${action}`, { method: "POST" });
     setIsStreaming(!isStreaming);
