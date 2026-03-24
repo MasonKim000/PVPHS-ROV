@@ -102,6 +102,13 @@ cd backend
 apt install -y libgl1
 git pull
 uv sync
-uv run python convert.py
+uv run python convert.py #one time for ai
 uv run uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+## ai
+
+```sh
+curl -X POST http://localhost:8000/detect/on
+curl -X POST http://localhost:8000/detect/off
 ```
