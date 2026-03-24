@@ -81,7 +81,7 @@ export default function CameraStream() {
         )}
 
         <div className="relative bg-gray-900 aspect-video rounded-md overflow-hidden">
-          {!isStreaming && (
+          {(!isStreaming || !hasFrame) && !(isStreaming && readyState !== ReadyState.OPEN) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -109,7 +109,7 @@ export default function CameraStream() {
           <img
             ref={imgRef}
             alt="JPEG Stream"
-            className={`w-full h-full object-contain ${!isStreaming ? "hidden" : ""}`}
+            className={`w-full h-full object-contain ${!hasFrame ? "hidden" : ""}`}
           />
         </div>
       </CardContent>
