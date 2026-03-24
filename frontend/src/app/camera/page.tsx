@@ -37,11 +37,14 @@ export default function CameraStream() {
 
   useEffect(() => {
     if (lastMessage?.data instanceof Blob) {
-      revokeImgSrc(imgRef.current);
+      const oldSrc = imgRef.current?.src;
       const url = URL.createObjectURL(lastMessage.data);
       if (imgRef.current) {
         imgRef.current.src = url;
         if (!hasFrame) setHasFrame(true);
+      }
+      if (oldSrc?.startsWith("blob:")) {
+        URL.revokeObjectURL(oldSrc);
       }
     }
   }, [lastMessage, hasFrame]);
