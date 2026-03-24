@@ -29,10 +29,10 @@ YOLO AI 모델이 사진을 분석
 YOLO 모델은 원래 PyTorch 형식(`.pt`)인데, 라즈베리파이에서는 느립니다.
 이걸 **NCNN** 형식으로 변환하면 파이의 ARM CPU에 최적화되어 훨씬 빨라집니다.
 
-| 형식 | 파이에서 속도 |
-|------|-------------|
+| 형식            | 파이에서 속도              |
+| --------------- | -------------------------- |
 | `.pt` (PyTorch) | ~1-2 FPS (슬라이드쇼 수준) |
-| NCNN | ~5-8 FPS (쓸만함) |
+| NCNN            | ~5-8 FPS (쓸만함)          |
 
 변환 방법 (처음 한 번만 하면 됨):
 
@@ -44,11 +44,11 @@ uv run python convert.py
 
 ## API 사용법
 
-| 동작 | 명령어 |
-|------|--------|
-| 감지 켜기 | `curl -X POST http://localhost:8000/detect/on` |
+| 동작      | 명령어                                          |
+| --------- | ----------------------------------------------- |
+| 감지 켜기 | `curl -X POST http://localhost:8000/detect/on`  |
 | 감지 끄기 | `curl -X POST http://localhost:8000/detect/off` |
-| 상태 확인 | `curl http://localhost:8000/detect/status` |
+| 상태 확인 | `curl http://localhost:8000/detect/status`      |
 
 감지는 **기본적으로 꺼져 있습니다**. 필요할 때만 켜세요.
 

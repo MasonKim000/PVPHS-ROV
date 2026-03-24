@@ -18,6 +18,8 @@ if not os.path.exists(MODEL_PATH):
 class Detector:
   """YOLOv8 object detector. Prefer NCNN model for Pi performance."""
 
+  INFER_SIZE = 640
+
   def __init__(self):
     self.model = YOLO(MODEL_PATH)
     self.enabled = False
@@ -25,7 +27,10 @@ class Detector:
   def annotate(self, frame: np.ndarray) -> np.ndarray:
     if not self.enabled:
       return frame
-    results = self.model(frame, verbose=False)
+    h, w = frame.shape[:2]
+    scale = self.INFER_SIZE / max(h, w)
+    small = cv2.resize(frame, (int(w * scale), int(h * scale)))
+    results = self.model(small, verbose=False)
     return results[0].plot()
 
 
