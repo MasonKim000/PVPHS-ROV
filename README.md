@@ -43,12 +43,13 @@ mkdir -p /data/git
 cd /data/git
 git clone git@github.com:MasonKim000/PVPHS-ROV.git
 cd PVPHS-ROV/frontend
-npm install
 
 # install shadcn ui
 
 npx shadcn@latest init --defaults
 npx shadcn@latest add card progress
+
+npm ci
 
 npm run dev
 ```
