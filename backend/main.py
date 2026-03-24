@@ -1,12 +1,14 @@
 import cv2
+from fastapi import FastAPI
+from fastapi.responses import Response
+
+app = FastAPI()
 
 
-def main():
+@app.get("/image")
+def get_image():
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
-    cv2.imwrite("test.jpg", frame)
     cap.release()
-
-
-if __name__ == "__main__":
-    main()
+    _, buffer = cv2.imencode(".jpg", frame)
+    return Response(content=buffer.tobytes(), media_type="image/jpeg")
