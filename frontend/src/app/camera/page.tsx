@@ -11,10 +11,11 @@ export default function CameraStream() {
   const [error, setError] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const wsUrl =
-    typeof window !== "undefined"
-      ? `ws://${window.location.hostname}:8000/ws`
-      : "";
+  const [wsUrl, setWsUrl] = useState<string | null>(null);
+
+  if (wsUrl === null && typeof window !== "undefined") {
+    setWsUrl(`ws://${window.location.hostname}:8000/ws`);
+  }
 
   const { lastMessage, readyState } = useWebSocket(wsUrl, {
     shouldReconnect: () => true,
