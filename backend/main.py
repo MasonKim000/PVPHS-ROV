@@ -63,6 +63,7 @@ class Camera:
         self.cap = cv2.VideoCapture(self.device)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
       self.ref_count += 1
 
   def close(self):
@@ -72,14 +73,14 @@ class Camera:
         self.cap.release()
         self.cap = None
 
-    def open(self):
-      with self.lock:
-        if self.cap is None or not self.cap.isOpened():
-          self.cap = cv2.VideoCapture(self.device)
-          self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-          self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-          self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self.ref_count += 1
+  def read_frame(self) -> np.ndarray | None:
+    with self.lock:
+      if not self.cap or not self.cap.isOpened():
+        return None
+      ret, frame = self.cap.read()
+      if not ret or frame is None:
+        return None
+      return frame
 
   def read_jpeg(self) -> bytes | None:
     frame = self.read_frame()
@@ -136,23 +137,23 @@ class JpegStream:
     finally:
       camera.close()
 
-    async def _broadcast_loop(self):
-      loop = asyncio.get_running_loop()
-      last_seq = -1
-      while not self.stop_event.is_set():
-        jpeg_data, last_seq = await loop.run_in_executor(
-            None, self.output.read, last_seq
-        )
-        if jpeg_data is None:
-          continue
-        tasks = [
-            ws.send_bytes(jpeg_data) for ws in self.connections.copy()
-        ]
-        if tasks:
-          results = await asyncio.gather(*tasks, return_exceptions=True)
-          for ws, result in zip(self.connections.copy(), results):
-            if isinstance(result, Exception):
-              self.connections.discard(ws)
+  async def _broadcast_loop(self):
+    loop = asyncio.get_running_loop()
+    last_seq = -1
+    while not self.stop_event.is_set():
+      jpeg_data, last_seq = await loop.run_in_executor(
+          None, self.output.read, last_seq
+      )
+      if jpeg_data is None:
+        continue
+      tasks = [
+          ws.send_bytes(jpeg_data) for ws in self.connections.copy()
+      ]
+      if tasks:
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for ws, result in zip(self.connections.copy(), results):
+          if isinstance(result, Exception):
+            self.connections.discard(ws)
 
   async def start(self):
     if not self.stop_event.is_set():
