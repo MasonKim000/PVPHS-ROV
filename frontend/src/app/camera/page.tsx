@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
-import { Camera, Loader2, Pause, Play, ScanSearch } from "lucide-react";
+import { Camera, Loader2, Pause, Play, RotateCw, ScanSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -10,6 +10,7 @@ export default function CameraStream() {
   const [streamEnabled, setStreamEnabled] = useState(true);
   const [imgSrc, setImgSrc] = useState("");
   const [detectEnabled, setDetectEnabled] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const prevUrlRef = useRef("");
 
   const wsUrl =
@@ -94,6 +95,13 @@ export default function CameraStream() {
           </span>
           <div className="flex gap-2">
             <Button
+              onClick={() => setRotation((prev) => (prev + 90) % 360)}
+              variant="outline"
+            >
+              <RotateCw className="mr-1 h-4 w-4" />
+              {rotation}°
+            </Button>
+            <Button
               onClick={toggleDetect}
               variant={detectEnabled ? "default" : "outline"}
             >
@@ -142,7 +150,8 @@ export default function CameraStream() {
             <img
               src={imgSrc}
               alt="Live Stream"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain transition-transform duration-300"
+              style={{ transform: `rotate(${rotation}deg)` }}
             />
           )}
         </div>
