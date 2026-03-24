@@ -48,18 +48,22 @@ camera = Camera()
 class StreamingOutput:
     def __init__(self):
         self.frame = None
+        self.seq = 0
         self.condition = Condition()
 
     def update(self, jpeg_bytes: bytes):
         with self.condition:
             self.frame = jpeg_bytes
+            self.seq += 1
             self.condition.notify_all()
 
-    def read(self, timeout: float = 1.0) -> bytes | None:
+    def read(self, last_seq: int = -1, timeout: float = 1.0) -> tuple[bytes | None, int]:
         with self.condition:
-            if not self.condition.wait(timeout=timeout):
-                return None
-            return self.frame
+            if self.seq == last_seq:
+                self.condition.wait(timeout=timeout)
+            if self.seq == last_seq:
+                return None, last_seq
+            return self.frame, self.seq
 
 
 class JpegStream:
@@ -86,8 +90,11 @@ class JpegStream:
 
     async def _broadcast_loop(self):
         loop = asyncio.get_running_loop()
+        last_seq = -1
         while not self.stop_event.is_set():
-            jpeg_data = await loop.run_in_executor(None, self.output.read)
+            jpeg_data, last_seq = await loop.run_in_executor(
+                None, self.output.read, last_seq
+            )
             if jpeg_data is None:
                 continue
             tasks = [
