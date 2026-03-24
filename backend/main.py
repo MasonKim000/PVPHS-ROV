@@ -2,8 +2,44 @@ import asyncio
 import cv2
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import Response, StreamingResponse
-from threading import Condition, Thread
+from threading import Condition, Thread, Lock
 from contextlib import asynccontextmanager
+
+
+class Camera:
+    """Shared camera instance to avoid device conflicts."""
+
+    def __init__(self, device: int = 0):
+        self.device = device
+        self.cap = None
+        self.lock = Lock()
+        self.ref_count = 0
+
+    def open(self):
+        with self.lock:
+            if self.cap is None or not self.cap.isOpened():
+                self.cap = cv2.VideoCapture(self.device)
+                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.ref_count += 1
+
+    def close(self):
+        with self.lock:
+            self.ref_count -= 1
+            if self.ref_count <= 0:
+                if self.cap:
+                    self.cap.release()
+                    self.cap = None
+                self.ref_count = 0
+
+    def read(self):
+        with self.lock:
+            if self.cap and self.cap.isOpened():
+                return self.cap.read()
+            return False, None
+
+
+camera = Camera()
 
 
 class StreamingOutput:
@@ -11,10 +47,9 @@ class StreamingOutput:
         self.frame = None
         self.condition = Condition()
 
-    def update(self, frame):
+    def update(self, jpeg_bytes):
         with self.condition:
-            _, buf = cv2.imencode(".jpg", frame)
-            self.frame = buf.tobytes()
+            self.frame = jpeg_bytes
             self.condition.notify_all()
 
     def read(self):
@@ -31,16 +66,15 @@ class JpegStream:
         self.capture_thread = None
 
     def _capture_loop(self):
-        cap = cv2.VideoCapture(0)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        camera.open()
         try:
             while self.active:
-                ret, frame = cap.read()
+                ret, frame = camera.read()
                 if ret:
-                    self.output.update(frame)
+                    _, buf = cv2.imencode(".jpg", frame)
+                    self.output.update(buf.tobytes())
         finally:
-            cap.release()
+            camera.close()
 
     async def _broadcast_loop(self):
         loop = asyncio.get_event_loop()
@@ -81,22 +115,31 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/image")
 def get_image():
-    cap = cv2.VideoCapture(0)
-    ret, frame = cap.read()
-    cap.release()
-    _, buffer = cv2.imencode(".jpg", frame)
-    return Response(content=buffer.tobytes(), media_type="image/jpeg")
+    camera.open()
+    try:
+        ret, frame = camera.read()
+        if not ret or frame is None:
+            return Response(content="Camera unavailable", status_code=503)
+        _, buffer = cv2.imencode(".jpg", frame)
+        return Response(content=buffer.tobytes(), media_type="image/jpeg")
+    finally:
+        camera.close()
 
 
 def generate_frames():
-    cap = cv2.VideoCapture(0)
-    while True:
-        ret, frame = cap.read()
-        _, buffer = cv2.imencode(".jpg", frame)
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
-        )
+    camera.open()
+    try:
+        while True:
+            ret, frame = camera.read()
+            if not ret:
+                break
+            _, buffer = cv2.imencode(".jpg", frame)
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+            )
+    finally:
+        camera.close()
 
 
 @app.get("/mjpeg")
