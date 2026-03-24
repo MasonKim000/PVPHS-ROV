@@ -22,6 +22,7 @@ class Camera:
                 self.cap = cv2.VideoCapture(self.device)
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self.ref_count += 1
 
     def close(self):

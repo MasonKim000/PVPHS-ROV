@@ -68,6 +68,7 @@ export default function CameraStream() {
               src={mjpegUrl}
               alt="JPEG Stream"
               onLoad={() => { if (!hasFrame) setHasFrame(true); }}
+              onError={() => { setIsStreaming(false); setHasFrame(false); }}
               className={`w-full h-full object-contain ${!hasFrame ? "hidden" : ""}`}
             />
           )}
