@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CameraStream() {
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasFrame, setHasFrame] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [wsUrl, setWsUrl] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -17,6 +18,7 @@ export default function CameraStream() {
       setWsUrl(`ws://${window.location.hostname}:8000/ws`);
     } else {
       setWsUrl(null);
+      setHasFrame(false);
       if (imgRef.current) {
         if (imgRef.current.src) {
           URL.revokeObjectURL(imgRef.current.src);
@@ -38,6 +40,7 @@ export default function CameraStream() {
           URL.revokeObjectURL(imgRef.current.src);
         }
         imgRef.current.src = url;
+        setHasFrame(true);
       }
     }
   }, [lastMessage]);
