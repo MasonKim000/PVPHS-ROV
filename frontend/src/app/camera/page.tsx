@@ -125,7 +125,11 @@ export default function CameraStream() {
           </div>
         </div>
 
-        <div className="relative bg-gray-900 aspect-video rounded-md overflow-hidden">
+        <div
+          className={`relative bg-gray-900 rounded-md overflow-hidden transition-all duration-300 ${
+            rotation % 180 === 0 ? "aspect-video" : "aspect-[9/16]"
+          }`}
+        >
           {!streamEnabled && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <Camera className="text-gray-500" size={48} strokeWidth={1.5} />
