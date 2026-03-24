@@ -16,12 +16,23 @@ if not os.path.exists(MODEL_PATH):
 
 
 class Detector:
-  """YOLOv8 object detector. Prefer NCNN model for Pi performance."""
+  """YOLOv8 object detector. Lazy-loads model on first enable."""
 
   INFER_SIZE = 640
 
   def __init__(self):
-    self.model = YOLO(MODEL_PATH)
+    self.model = None
+    self.enabled = False
+
+  def _ensure_model(self):
+    if self.model is None:
+      self.model = YOLO(MODEL_PATH)
+
+  def enable(self):
+    self._ensure_model()
+    self.enabled = True
+
+  def disable(self):
     self.enabled = False
 
   def annotate(self, frame: np.ndarray) -> np.ndarray:
@@ -242,13 +253,13 @@ async def stop_stream():
 
 @app.post("/detect/on")
 def detect_on():
-  detector.enabled = True
+  detector.enable()
   return {"detection": True}
 
 
 @app.post("/detect/off")
 def detect_off():
-  detector.enabled = False
+  detector.disable()
   return {"detection": False}
 
 
