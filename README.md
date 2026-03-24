@@ -66,5 +66,8 @@ it works
 cd /data/git/PVPHS-ROV/backend
 git pull
 uv sync
-uv run main.py
+uv run main.py # take picture
+uv run uvicorn main:app --host 0.0.0.0 --port 8000  # take picture and show on browser
 ```
+
+http://192.168.254.245:8000/image
