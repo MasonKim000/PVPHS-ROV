@@ -1,5 +1,11 @@
+import cv2
+
+
 def main():
-    print("Hello from backend!")
+    cap = cv2.VideoCapture(0)
+    ret, frame = cap.read()
+    cv2.imwrite("test.jpg", frame)
+    cap.release()
 
 
 if __name__ == "__main__":

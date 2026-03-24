@@ -36,7 +36,7 @@ npx create-next-app@latest . --typescript --tailwind --eslint --src-dir --app --
 ✔ Would you like to include AGENTS.md to guide coding agents to write up-to-date Next.js code? => Yes
 ```
 
-## deploy to raspberry pi
+### deploy to raspberry pi
 
 ```sh
 mkdir -p /data/git
@@ -59,3 +59,11 @@ npm run dev
 http://192.168.254.245:3000
 
 it works
+
+## backend
+
+```sh
+cd /data/git/PVPHS-ROV/backend
+uv sync
+uv run main.py
+```
