@@ -14,9 +14,13 @@ function getCpuUsage() {
 }
 
 async function getCpuTemp() {
-  const { stdout } = await execAsync("vcgencmd measure_temp");
-  // in celsius! OBVIOUSLY!
-  return parseFloat(stdout.replace("temp=", "").replace("'C", ""));
+  try {
+    const { stdout } = await execAsync("vcgencmd measure_temp");
+    return parseFloat(stdout.replace("temp=", "").replace("'C", ""));
+  } catch {
+    // vcgencmd is Raspberry Pi only — return 0 on other platforms
+    return 0;
+  }
 }
 
 function bytesToGB(bytes: number) {
