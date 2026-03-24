@@ -64,6 +64,7 @@ it works
 
 ```sh
 cd /data/git/PVPHS-ROV/backend
+git pull
 uv sync
 uv run main.py
 ```
