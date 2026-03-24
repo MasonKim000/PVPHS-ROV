@@ -6,8 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.135.2",
+    "ncnn>=1.0.20260114",
     "numpy>=2.4.3",
     "opencv-python-headless>=4.13.0.92",
+    "pnnx>=20260112",
     "ultralytics>=8.4.26",
     "uvicorn>=0.42.0",
     "websockets>=16.0",
