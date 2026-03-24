@@ -79,3 +79,5 @@ let's make frontend to show the video stream
 ```sh
 uv add websockets
 ```
+
+http://192.168.254.245:8000/docs
