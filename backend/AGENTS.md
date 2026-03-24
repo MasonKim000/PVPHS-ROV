@@ -3,10 +3,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```sh
-uv sync                                             # install dependencies
-uv run uvicorn main:app --host 0.0.0.0 --port 8000  # run API server
-uv run main.py                                      # single picture capture (script mode)
-uv add <package>                                     # add dependency
+uv sync                                                                           # install dependencies
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3  # run API server
+uv run main.py                                                                    # single picture capture (script mode)
+uv add <package>                                                                  # add dependency
 ```
 
 ## Tech Stack
@@ -26,14 +26,14 @@ Single-file application (`main.py`) with three main classes:
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/image` | Single JPEG snapshot |
-| GET | `/mjpeg` | MJPEG continuous stream |
-| WS | `/ws` | WebSocket binary JPEG frames |
-| POST | `/start` | Manually start capture |
-| POST | `/stop` | Manually stop capture |
-| GET | `/docs` | FastAPI auto-generated API docs |
+| Method | Path     | Description                     |
+| ------ | -------- | ------------------------------- |
+| GET    | `/image` | Single JPEG snapshot            |
+| GET    | `/mjpeg` | MJPEG continuous stream         |
+| WS     | `/ws`    | WebSocket binary JPEG frames    |
+| POST   | `/start` | Manually start capture          |
+| POST   | `/stop`  | Manually stop capture           |
+| GET    | `/docs`  | FastAPI auto-generated API docs |
 
 ## Key Details
 
