@@ -11,7 +11,12 @@ export default function CameraStream() {
   const [error, setError] = useState<string | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const { lastMessage, readyState } = useWebSocket("/py/ws", {
+  const wsUrl =
+    typeof window !== "undefined"
+      ? `ws://${window.location.hostname}:8000/ws`
+      : "";
+
+  const { lastMessage, readyState } = useWebSocket(wsUrl, {
     shouldReconnect: () => true,
   });
 
