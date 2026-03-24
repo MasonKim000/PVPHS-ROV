@@ -47,7 +47,7 @@ cd PVPHS-ROV/frontend
 # install shadcn ui
 
 npx shadcn@latest init --defaults
-npx shadcn@latest add card progress
+npx shadcn@latest add card progress button alert
 
 npm ci
 
