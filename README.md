@@ -69,7 +69,7 @@ cd /data/git/PVPHS-ROV/backend
 git pull
 uv sync
 uv run main.py # take picture
-uv run uvicorn main:app --host 0.0.0.0 --port 8000  # take picture and show on browser
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3  # take picture and show on browser
 ```
 
 http://192.168.254.245:8000/image
@@ -102,8 +102,7 @@ cd backend
 apt install -y libgl1
 git pull
 uv sync
-uv run python convert.py #one time for ai
-uv run uvicorn main:app --host 0.0.0.0 --port 8000
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3
 ```
 
 ## ai

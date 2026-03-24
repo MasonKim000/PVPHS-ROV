@@ -72,14 +72,14 @@ class Camera:
         self.cap.release()
         self.cap = None
 
-  def read_frame(self) -> np.ndarray | None:
-    with self.lock:
-      if not self.cap or not self.cap.isOpened():
-        return None
-      ret, frame = self.cap.read()
-      if not ret or frame is None:
-        return None
-      return frame
+    def open(self):
+      with self.lock:
+        if self.cap is None or not self.cap.isOpened():
+          self.cap = cv2.VideoCapture(self.device)
+          self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+          self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+          self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.ref_count += 1
 
   def read_jpeg(self) -> bytes | None:
     frame = self.read_frame()
@@ -96,18 +96,22 @@ camera = Camera()
 class StreamingOutput:
   def __init__(self):
     self.frame = None
+    self.seq = 0
     self.condition = Condition()
 
   def update(self, jpeg_bytes: bytes):
     with self.condition:
       self.frame = jpeg_bytes
+      self.seq += 1
       self.condition.notify_all()
 
-  def read(self, timeout: float = 1.0) -> bytes | None:
+  def read(self, last_seq: int = -1, timeout: float = 1.0) -> tuple[bytes | None, int]:
     with self.condition:
-      if not self.condition.wait(timeout=timeout):
-        return None
-      return self.frame
+      if self.seq == last_seq:
+        self.condition.wait(timeout=timeout)
+      if self.seq == last_seq:
+        return None, last_seq
+      return self.frame, self.seq
 
 
 class JpegStream:
@@ -132,20 +136,23 @@ class JpegStream:
     finally:
       camera.close()
 
-  async def _broadcast_loop(self):
-    loop = asyncio.get_running_loop()
-    while not self.stop_event.is_set():
-      jpeg_data = await loop.run_in_executor(None, self.output.read)
-      if jpeg_data is None:
-        continue
-      tasks = [
-          ws.send_bytes(jpeg_data) for ws in self.connections.copy()
-      ]
-      if tasks:
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for ws, result in zip(self.connections.copy(), results):
-          if isinstance(result, Exception):
-            self.connections.discard(ws)
+    async def _broadcast_loop(self):
+      loop = asyncio.get_running_loop()
+      last_seq = -1
+      while not self.stop_event.is_set():
+        jpeg_data, last_seq = await loop.run_in_executor(
+            None, self.output.read, last_seq
+        )
+        if jpeg_data is None:
+          continue
+        tasks = [
+            ws.send_bytes(jpeg_data) for ws in self.connections.copy()
+        ]
+        if tasks:
+          results = await asyncio.gather(*tasks, return_exceptions=True)
+          for ws, result in zip(self.connections.copy(), results):
+            if isinstance(result, Exception):
+              self.connections.discard(ws)
 
   async def start(self):
     if not self.stop_event.is_set():
@@ -169,11 +176,13 @@ class JpegStream:
 
 jpeg_stream = JpegStream()
 jpeg_stream.stop_event.set()
+shutdown_event = Event()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
   yield
+  shutdown_event.set()
   await jpeg_stream.stop()
 
 
@@ -202,7 +211,7 @@ def get_image():
 def generate_frames():
   camera.open()
   try:
-    while True:
+    while not shutdown_event.is_set():
       jpeg = camera.read_jpeg()
       if jpeg is None:
         break

@@ -14,11 +14,13 @@ Two independent applications in one repo:
 The frontend proxies `/py/*` requests to the backend at `http://localhost:8000/*` via Next.js rewrites in `next.config.ts`.
 
 **Camera streaming flow:** Backend captures frames via OpenCV and delivers them three ways:
+
 1. Single JPEG snapshot — `GET /image`
 2. MJPEG continuous stream — `GET /mjpeg`
 3. WebSocket binary frames — `WS /ws` (auto-starts/stops capture based on connected clients)
 
 **Frontend pages:**
+
 - `/` — Landing page
 - `/camera` — Live WebSocket camera stream (client component, `react-use-websocket`)
 - `/stats` — Raspberry Pi system info (server component, reads CPU/memory/temp)
@@ -27,7 +29,7 @@ The frontend proxies `/py/*` requests to the backend at `http://localhost:8000/*
 
 ```sh
 # Backend
-cd backend && uv sync && uv run uvicorn main:app --host 0.0.0.0 --port 8000
+cd backend && uv sync && uv run uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3
 
 # Frontend
 cd frontend && npm ci && npm run dev
