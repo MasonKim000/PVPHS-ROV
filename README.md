@@ -72,7 +72,7 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000  # take picture and show on b
 
 http://192.168.254.245:8000/image
 
-http://192.168.254.245:8000/mjpg # you can see the video stream
+http://192.168.254.245:8000/mjpeg # you can see the video stream
 
 let's make frontend to show the video stream
 

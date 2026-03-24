@@ -1,9 +1,9 @@
 import asyncio
 import cv2
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
-from threading import Condition, Thread, Lock
+from threading import Condition, Event, Thread, Lock
 from contextlib import asynccontextmanager
 
 
@@ -26,18 +26,20 @@ class Camera:
 
     def close(self):
         with self.lock:
-            self.ref_count -= 1
-            if self.ref_count <= 0:
-                if self.cap:
-                    self.cap.release()
-                    self.cap = None
-                self.ref_count = 0
+            self.ref_count = max(0, self.ref_count - 1)
+            if self.ref_count == 0 and self.cap:
+                self.cap.release()
+                self.cap = None
 
-    def read(self):
+    def read_jpeg(self) -> bytes | None:
         with self.lock:
-            if self.cap and self.cap.isOpened():
-                return self.cap.read()
-            return False, None
+            if not self.cap or not self.cap.isOpened():
+                return None
+            ret, frame = self.cap.read()
+            if not ret or frame is None:
+                return None
+            _, buf = cv2.imencode(".jpg", frame)
+            return buf.tobytes()
 
 
 camera = Camera()
@@ -48,61 +50,77 @@ class StreamingOutput:
         self.frame = None
         self.condition = Condition()
 
-    def update(self, jpeg_bytes):
+    def update(self, jpeg_bytes: bytes):
         with self.condition:
             self.frame = jpeg_bytes
             self.condition.notify_all()
 
-    def read(self):
+    def read(self, timeout: float = 1.0) -> bytes | None:
         with self.condition:
-            self.condition.wait()
+            if not self.condition.wait(timeout=timeout):
+                return None
             return self.frame
 
 
 class JpegStream:
     def __init__(self):
-        self.active = False
+        self.stop_event = Event()
         self.connections: set[WebSocket] = set()
         self.output = StreamingOutput()
-        self.capture_thread = None
+        self.capture_thread: Thread | None = None
+        self.broadcast_task: asyncio.Task | None = None
+
+    @property
+    def active(self) -> bool:
+        return not self.stop_event.is_set()
 
     def _capture_loop(self):
         camera.open()
         try:
-            while self.active:
-                ret, frame = camera.read()
-                if ret:
-                    _, buf = cv2.imencode(".jpg", frame)
-                    self.output.update(buf.tobytes())
+            while not self.stop_event.is_set():
+                jpeg = camera.read_jpeg()
+                if jpeg:
+                    self.output.update(jpeg)
         finally:
             camera.close()
 
     async def _broadcast_loop(self):
-        loop = asyncio.get_event_loop()
-        while self.active:
+        loop = asyncio.get_running_loop()
+        while not self.stop_event.is_set():
             jpeg_data = await loop.run_in_executor(None, self.output.read)
-            for ws in self.connections.copy():
-                try:
-                    await ws.send_bytes(jpeg_data)
-                except Exception:
-                    self.connections.discard(ws)
+            if jpeg_data is None:
+                continue
+            tasks = [
+                ws.send_bytes(jpeg_data) for ws in self.connections.copy()
+            ]
+            if tasks:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for ws, result in zip(self.connections.copy(), results):
+                    if isinstance(result, Exception):
+                        self.connections.discard(ws)
 
     async def start(self):
-        if not self.active:
-            self.active = True
-            self.capture_thread = Thread(target=self._capture_loop, daemon=True)
-            self.capture_thread.start()
-            asyncio.create_task(self._broadcast_loop())
+        if not self.stop_event.is_set():
+            return
+        self.stop_event.clear()
+        self.capture_thread = Thread(target=self._capture_loop, daemon=True)
+        self.capture_thread.start()
+        self.broadcast_task = asyncio.create_task(self._broadcast_loop())
 
     async def stop(self):
-        if self.active:
-            self.active = False
-            if self.capture_thread:
-                self.capture_thread.join(timeout=5)
-                self.capture_thread = None
+        if self.stop_event.is_set():
+            return
+        self.stop_event.set()
+        if self.capture_thread:
+            self.capture_thread.join(timeout=5)
+            self.capture_thread = None
+        if self.broadcast_task:
+            await self.broadcast_task
+            self.broadcast_task = None
 
 
 jpeg_stream = JpegStream()
+jpeg_stream.stop_event.set()
 
 
 @asynccontextmanager
@@ -125,11 +143,10 @@ app.add_middleware(
 def get_image():
     camera.open()
     try:
-        ret, frame = camera.read()
-        if not ret or frame is None:
+        jpeg = camera.read_jpeg()
+        if jpeg is None:
             return Response(content="Camera unavailable", status_code=503)
-        _, buffer = cv2.imencode(".jpg", frame)
-        return Response(content=buffer.tobytes(), media_type="image/jpeg")
+        return Response(content=jpeg, media_type="image/jpeg")
     finally:
         camera.close()
 
@@ -138,13 +155,12 @@ def generate_frames():
     camera.open()
     try:
         while True:
-            ret, frame = camera.read()
-            if not ret:
+            jpeg = camera.read_jpeg()
+            if jpeg is None:
                 break
-            _, buffer = cv2.imencode(".jpg", frame)
             yield (
                 b"--frame\r\n"
-                b"Content-Type: image/jpeg\r\n\r\n" + buffer.tobytes() + b"\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
             )
     finally:
         camera.close()
@@ -162,12 +178,12 @@ def mjpeg():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     jpeg_stream.connections.add(websocket)
-    if not jpeg_stream.active:
+    if jpeg_stream.stop_event.is_set():
         await jpeg_stream.start()
     try:
         while True:
             await websocket.receive_text()
-    except Exception:
+    except WebSocketDisconnect:
         pass
     finally:
         jpeg_stream.connections.discard(websocket)
