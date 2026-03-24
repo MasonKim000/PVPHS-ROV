@@ -63,6 +63,8 @@ it works
 ## backend
 
 ```sh
+apt install -y libgl1
+
 cd /data/git/PVPHS-ROV/backend
 git pull
 uv sync
@@ -97,7 +99,9 @@ npm run dev
 
 
 cd backend
+apt install -y libgl1
 git pull
 uv sync
+uv run python convert.py
 uv run uvicorn main:app --host 0.0.0.0 --port 8000
 ```
