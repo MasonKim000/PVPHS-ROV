@@ -126,7 +126,7 @@ export default function CameraStream() {
 
         <div
           className={`relative bg-gray-900 rounded-md overflow-hidden ${
-            isPortrait ? "aspect-[9/16] max-h-[80vh]" : "aspect-video"
+            isPortrait ? "aspect-[9/16] max-h-[70vh] mx-auto" : "aspect-video"
           }`}
         >
           {!streamEnabled && (
@@ -153,14 +153,10 @@ export default function CameraStream() {
             <img
               src={imgSrc}
               alt="Live Stream"
-              className="absolute inset-0 m-auto object-contain"
+              className="w-full h-full object-cover"
               style={
                 rotation !== 0
-                  ? {
-                      transform: `rotate(${rotation}deg)`,
-                      width: isPortrait ? `${(16 / 9) * 100}%` : "100%",
-                      height: isPortrait ? `${(9 / 16) * 100}%` : "100%",
-                    }
+                  ? { transform: `rotate(${rotation}deg)` }
                   : undefined
               }
             />
