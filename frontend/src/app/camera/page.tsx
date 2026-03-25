@@ -72,6 +72,7 @@ export default function CameraStream() {
   }, [streamEnabled]);
 
   const hasFrame = imgSrc !== "";
+  const isPortrait = rotation % 180 !== 0;
 
   const statusText = {
     [ReadyState.CONNECTING]: "CONNECTING",
@@ -123,7 +124,11 @@ export default function CameraStream() {
           </div>
         </div>
 
-        <div className="relative bg-gray-900 aspect-video rounded-md overflow-hidden">
+        <div
+          className={`relative bg-gray-900 rounded-md overflow-hidden ${
+            isPortrait ? "aspect-[9/16] max-h-[80vh]" : "aspect-video"
+          }`}
+        >
           {!streamEnabled && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <Camera className="text-gray-500" size={48} strokeWidth={1.5} />
@@ -148,11 +153,13 @@ export default function CameraStream() {
             <img
               src={imgSrc}
               alt="Live Stream"
-              className="w-full h-full object-contain"
+              className="absolute inset-0 m-auto object-contain"
               style={
-                rotation
+                rotation !== 0
                   ? {
-                      transform: `rotate(${rotation}deg)${rotation % 180 !== 0 ? ` scale(${9 / 16})` : ""}`,
+                      transform: `rotate(${rotation}deg)`,
+                      width: isPortrait ? `${(16 / 9) * 100}%` : "100%",
+                      height: isPortrait ? `${(9 / 16) * 100}%` : "100%",
                     }
                   : undefined
               }
