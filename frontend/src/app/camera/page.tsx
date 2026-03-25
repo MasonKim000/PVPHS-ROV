@@ -58,9 +58,7 @@ export default function CameraStream() {
       if (!res.ok) return;
       const data = await res.json();
       setDetectEnabled(data.detection);
-    } catch {
-      // network error
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -125,11 +123,7 @@ export default function CameraStream() {
           </div>
         </div>
 
-        <div
-          className={`relative bg-gray-900 rounded-md overflow-hidden transition-all duration-300 ${
-            rotation % 180 === 0 ? "aspect-video" : "aspect-[9/16]"
-          }`}
-        >
+        <div className="relative bg-gray-900 aspect-video rounded-md overflow-hidden">
           {!streamEnabled && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
               <Camera className="text-gray-500" size={48} strokeWidth={1.5} />
@@ -154,8 +148,14 @@ export default function CameraStream() {
             <img
               src={imgSrc}
               alt="Live Stream"
-              className="w-full h-full object-contain transition-transform duration-300"
-              style={{ transform: `rotate(${rotation}deg)` }}
+              className="w-full h-full object-contain"
+              style={
+                rotation
+                  ? {
+                      transform: `rotate(${rotation}deg)${rotation % 180 !== 0 ? ` scale(${9 / 16})` : ""}`,
+                    }
+                  : undefined
+              }
             />
           )}
         </div>
