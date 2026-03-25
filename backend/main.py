@@ -15,6 +15,10 @@ if not os.path.exists(MODEL_PATH):
   MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolov8n.pt")
 
 
+class CameraUnavailableError(RuntimeError):
+  pass
+
+
 class Detector:
   """YOLOv8 object detector. Lazy-loads model on first enable."""
 
@@ -61,6 +65,10 @@ class Camera:
     with self.lock:
       if self.cap is None or not self.cap.isOpened():
         self.cap = cv2.VideoCapture(self.device)
+        if not self.cap.isOpened():
+          self.cap.release()
+          self.cap = None
+          raise CameraUnavailableError("Camera device is busy or unavailable")
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
@@ -128,7 +136,11 @@ class JpegStream:
     return not self.stop_event.is_set()
 
   def _capture_loop(self):
-    camera.open()
+    try:
+      camera.open()
+    except CameraUnavailableError:
+      self.stop_event.set()
+      return
     try:
       while not self.stop_event.is_set():
         jpeg = camera.read_jpeg()
@@ -199,7 +211,10 @@ app.add_middleware(
 
 @app.get("/image")
 def get_image():
-  camera.open()
+  try:
+    camera.open()
+  except CameraUnavailableError as e:
+    return Response(content=str(e), status_code=503)
   try:
     jpeg = camera.read_jpeg()
     if jpeg is None:
@@ -210,7 +225,10 @@ def get_image():
 
 
 def generate_frames():
-  camera.open()
+  try:
+    camera.open()
+  except CameraUnavailableError:
+    return
   try:
     while not shutdown_event.is_set():
       jpeg = camera.read_jpeg()
