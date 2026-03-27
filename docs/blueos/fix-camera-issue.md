@@ -57,7 +57,7 @@ curl -X POST http://blueos.local:6020/streams \
     "name": "MediaMTX RTSP",
     "source": "Redirect",
     "stream_information": {
-      "endpoints": ["rtsp://192.168.254.242:8555/input"],
+      "endpoints": ["rtsp://localhost:8555/input"],
       "configuration": {
         "type": "redirect"
       },
@@ -79,7 +79,7 @@ curl -X DELETE "http://blueos.local:6020/delete_stream?name=MediaMTX%20RTSP"
 
 ```sh
 brew install ffmpeg
-ffplay -fflags nobuffer rtsp://192.168.254.242:8555/input
+ffplay -fflags nobuffer rtsp://192.168.2.2:8555/input
 ```
 
 ## let's confirm with Cockpit
