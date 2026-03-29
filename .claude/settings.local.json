@@ -6,7 +6,8 @@
       "Bash(uv run:*)",
       "Bash(cd:*)",
       "Bash(uv add:*)",
-      "Bash(uv remove:*)"
+      "Bash(uv remove:*)",
+      "Bash(mkdir:*)"
     ]
   }
 }
