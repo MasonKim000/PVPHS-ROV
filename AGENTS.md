@@ -37,5 +37,4 @@ cd frontend && npm ci && npm run dev
 
 ## Note
 
-- `frontend/` has its own `.git` directory (separate git history from root)
 - See `backend/CLAUDE.md` and `frontend/CLAUDE.md` for app-specific details
