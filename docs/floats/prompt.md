@@ -13,6 +13,7 @@ Identify all the implementation requirements from this document and save them to
 
 ```markdown
 /clear
+
 넌 뛰어난 Python developer야.
 Float Mission Station 프로그램을 만들어줘.
 
