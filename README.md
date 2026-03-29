@@ -56,7 +56,7 @@ npm run dev
 
 ### let's check
 
-http://192.168.254.245:3000
+http://<RASPBERRY_PI_IP>:3000
 
 it works
 
@@ -72,9 +72,9 @@ uv run main.py # take picture
 uv run uvicorn main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3  # take picture and show on browser
 ```
 
-http://192.168.254.245:8000/image
+http://<RASPBERRY_PI_IP>:8000/image
 
-http://192.168.254.245:8000/mjpeg # you can see the video stream
+http://<RASPBERRY_PI_IP>:8000/mjpeg # you can see the video stream
 
 let's make frontend to show the video stream
 
@@ -82,7 +82,7 @@ let's make frontend to show the video stream
 uv add websockets
 ```
 
-http://192.168.254.245:8000/docs
+http://<RASPBERRY_PI_IP>:8000/docs
 
 ## git clone
 

@@ -29,10 +29,10 @@ We use the smallest version called **YOLOv8n** ("n" = nano) so it can run on a R
 The YOLO model comes in PyTorch format (`.pt`), which is slow on a Raspberry Pi.
 We convert it to **NCNN** format, which is optimized for ARM CPUs like the Pi's.
 
-| Format | Speed on Pi |
-|--------|-------------|
+| Format          | Speed on Pi          |
+| --------------- | -------------------- |
 | `.pt` (PyTorch) | ~1-2 FPS (slideshow) |
-| NCNN | ~5-8 FPS (usable) |
+| NCNN            | ~5-8 FPS (usable)    |
 
 To convert (only need to do this once):
 
@@ -44,11 +44,11 @@ This creates a `yolov8n_ncnn_model/` folder that the server uses automatically.
 
 ## API Endpoints
 
-| Action | Command |
-|--------|---------|
-| Turn detection ON | `curl -X POST http://localhost:8000/detect/on` |
+| Action             | Command                                         |
+| ------------------ | ----------------------------------------------- |
+| Turn detection ON  | `curl -X POST http://localhost:8000/detect/on`  |
 | Turn detection OFF | `curl -X POST http://localhost:8000/detect/off` |
-| Check status | `curl http://localhost:8000/detect/status` |
+| Check status       | `curl http://localhost:8000/detect/status`      |
 
 Detection is **OFF by default**. Turn it on when you need it.
 

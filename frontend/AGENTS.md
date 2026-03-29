@@ -1,6 +1,6 @@
 # frontend
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Commands
 
@@ -27,12 +27,16 @@ This project uses Next.js 16 which has breaking changes from training data. Read
 - `proxy.ts` replaces `middleware.ts`
 - Turbopack config is top-level (not under `experimental`)
 
+## Pages
+
+- `/` — Landing page
+- `/camera` — Live WebSocket camera stream (client component, `react-use-websocket`)
+- `/stats` — Raspberry Pi system info (server component, reads CPU/memory/temp)
+
 ## Architecture
 
 - `next.config.ts` rewrites `/py/*` to `http://localhost:8000/*` (backend proxy)
-- `allowedDevOrigins` includes `192.168.254.245` (Raspberry Pi)
-- `/camera` page is a client component using `react-use-websocket` for live video
-- `/stats` page is a server component reading system info via Node.js `os` module and `vcgencmd` (Raspberry Pi only)
+- `allowedDevOrigins` allows local network access (Raspberry Pi)
 - `src/lib/system.ts` — server-side utility for CPU/memory/temperature data
 - `src/components/nav.tsx` — client component, shared navigation bar
 

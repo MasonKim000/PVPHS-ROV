@@ -1,4 +1,4 @@
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI agents when working with code in this repository.
 
 ## Commands
 
@@ -23,6 +23,14 @@ Single-file application (`main.py`) with three main classes:
 - **`Camera`** — Shared OpenCV VideoCapture wrapper with thread-safe ref-counting. Opens device 0 at 1920x1080. Multiple consumers share one capture instance; device releases when ref count hits 0.
 - **`StreamingOutput`** — Thread-safe frame buffer using `Condition`. Capture thread writes frames, readers block until notified.
 - **`JpegStream`** — Manages WebSocket streaming lifecycle. Runs a background capture thread and an async broadcast loop. Auto-starts on first WebSocket connection, auto-stops when all clients disconnect.
+
+## Camera Streaming Flow
+
+Backend captures frames via OpenCV and delivers them three ways:
+
+1. Single JPEG snapshot — `GET /image`
+2. MJPEG continuous stream — `GET /mjpeg`
+3. WebSocket binary frames — `WS /ws` (auto-starts/stops capture based on connected clients)
 
 ## API Endpoints
 
