@@ -4,7 +4,9 @@
       "Bash(uv init:*)",
       "Bash(uv sync:*)",
       "Bash(uv run:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(uv add:*)",
+      "Bash(uv remove:*)"
     ]
   }
 }
